@@ -3,7 +3,8 @@
 # most of this application adapted from the following walkthrough:
 # https://towardsdatascience.com/how-to-use-a-pre-trained-model-vgg-for-image-classification-8dd7c4a4a517
 
-import sys, os, json
+import os, json
+from config import Config
 from time import time
 from predict import predict
 from formatresult import format_result
@@ -12,7 +13,12 @@ from keras.applications.vgg16 import VGG16
 print("\n\nImage Sorting Utility\n")
 print("Script by Mikayla Dobson\n")
 print("\n\n")
-print("Begininning setup...\n\n")
+
+############################## CONFIG
+
+print("Running app config...")
+appconfig = Config()
+config_file = appconfig.run()
 
 ############################## SETUP
 ############################## SETUP
@@ -24,7 +30,7 @@ if (not os.path.exists("./predictions")):
     os.makedirs("./predictions")
 
 # receive directory path as CLI argument and get a list of all files in path
-src_path = sys.argv[1]
+src_path = config_file.data_path
 
 if (src_path[-1] != "/"):
     src_path += "/"
