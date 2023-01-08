@@ -8,7 +8,7 @@ class Config:
             self = format
         else:
             self.data_path: str = ""
-            self.pg_config = None
+            self.pg_dsn = None
             self.sort_by_match_strength: bool = False
 
     def __repr__(self):
@@ -63,11 +63,9 @@ class Config:
             self.data_path = data_path
 
     def set_pg_config(self):
-        """Determine if data should be associated with a PostgreSQL instance, and, if so, record the required connection info"""
+        """Determine if data should be associated with a PostgreSQL instance, and, if so, record the required connection info as dsn string"""
         elect_for_pg = input("Connect this program to a PostgreSQL instance? y/n ").lower()
         if elect_for_pg == "y":
-            self.pg_config = {}
-
             print("Please provide the relevant connection info. This sensitive information will only be recorded locally on your own machine.")
             dbname = input("Provide the DB name: ")
             user = input("Provide the username: ")
@@ -91,7 +89,7 @@ class Config:
                 conn.close()
 
                 print("Connection successful!")
-                self.pg_config['dsn'] = dsn
+                self.pg_dsn = dsn
             except psycopg2.Error as e:
                 print("There was an error connecting: ")
                 print(e)
