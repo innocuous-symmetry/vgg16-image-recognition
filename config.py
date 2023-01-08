@@ -25,14 +25,14 @@ class Config:
                 self.set_pg_config()
                 self.output_formatting()
                 with open("./config.json", "w") as outfile:
-                    json.dump(self.__encode(), outfile)
+                    json.dump(self.__dict__, outfile)
                 return self
         else:
             self.receive_data_path()
             self.set_pg_config()
             self.output_formatting()
             with open("./config.json", "w") as outfile:
-                json.dump(self.__encode(), outfile)
+                json.dump(self.__dict__, outfile)
             return self
 
     # if a config file already exists, offer to use it instead
@@ -42,9 +42,9 @@ class Config:
         
         if response_for_prev_config == "y":
             with open("./config.json", "r") as infile:
-                config_data = json.load(infile)
+                config_data: Config = json.load(infile)
 
-            return Config(config_data)
+            return config_data
         elif response_for_prev_config == "n":
             return None
         else:
@@ -61,12 +61,6 @@ class Config:
         else:
             print("Got it!")
             self.data_path = data_path
-
-    def get_data_path(self):
-        return self.data_path
-
-    def set_data_path(self, value):
-        self.data_path = value
 
     def set_pg_config(self):
         """Determine if data should be associated with a PostgreSQL instance, and, if so, record the required connection info"""
@@ -118,6 +112,3 @@ class Config:
         else:
             print("Invalid response.")
             self.output_formatting()
-
-    def __encode(self):
-        return json.dumps(self, default=lambda x: x.__dict__)

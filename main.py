@@ -14,11 +14,11 @@ print("\n\n")
 ############################## CONFIG
 
 print("Running app config...")
-appconfig: Config = Config()
+appconfig = Config()
 config_file = appconfig.run()
 
-if (config_file.get_data_path()[-1] != "/"):
-    config_file.set_data_path(config_file.get_data_path() + "/")
+if (config_file['data_path'][-1] != "/"):
+    config_file['data_path'] = config_file['data_path'] + "/"
 
 # create the target directory if it doesn't exist
 if (not os.path.exists("./predictions")):
@@ -29,7 +29,7 @@ if (not os.path.exists("./predictions")):
 ############################## SETUP
 ############################## SETUP
 
-files = os.listdir(config_file.data_path)
+files = os.listdir(config_file['data_path'])
 
 # generate current time for use in identifying outfiles
 cur_time = str(int(time()))
@@ -41,22 +41,22 @@ all_results = []
 ############################## ANALYSIS
 ############################## ANALYSIS
 
-print("Attempting TF imports...\n\n")
+print("\nAttempting imports...\n")
 
 from predict import predict
 from formatresult import format_result
 from keras.applications.vgg16 import VGG16
 
-print("Success!")
+print("\nSuccess!\n")
 
 # declare model to be used for each prediction
 model = VGG16(weights='imagenet')
 
-print("Running image analysis. This may take some time...\n\n")
+print("\nRunning image analysis. This may take some time...\n\n")
 
 # for each file in directory, append its prediction result to main list
 for file in files:
-    result = predict(model, config_file.data_path + file)
+    result = predict(model, config_file['data_path'] + file)
     if result is not None:
         all_results.append({ "path": file, "prediction": result })
 
@@ -74,6 +74,6 @@ print("Analysis complete! Beginning sort process...\n\n")
 ############################## SORTING
 ############################## SORTING
 
-format_result(appconfig, json_path)
+format_result(config_file, json_path)
 
 print("File sort successful! Process complete.")

@@ -5,13 +5,13 @@ def format_result(app_config: Config, json_path):
     # dictionary to hold and later display our results
     insertions_by_label = {}
 
-    data_path = app_config.data_path
+    data_path = app_config['data_path']
 
     # if pg_config is not None, run the postgres prediction[0] of this code
-    pg_config = app_config.pg_config
+    pg_config = app_config['pg_config']
 
     # if this is True, run the prediction[0] "for line in contents:" below
-    sort_by_match_strength = app_config.sort_by_match_strength
+    sort_by_match_strength = app_config['sort_by_match_strength']
 
     weak_results = 0
     total_count = 0
@@ -51,6 +51,9 @@ def format_result(app_config: Config, json_path):
 
         if not guess_label in insertions_by_label:
             insertions_by_label[guess_label] = 0
+
+        print(img_path)
+        print("./predictions/" + guess_label)
 
         # copy file to appropriate location, depending on if sorting
         if sort_by_match_strength:
