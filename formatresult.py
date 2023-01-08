@@ -1,4 +1,5 @@
 import json, os, shutil
+from pgutil import PGUTIL
 from config import Config
 
 def format_result(app_config: Config, json_path):
@@ -8,7 +9,7 @@ def format_result(app_config: Config, json_path):
     data_path = app_config['data_path']
 
     # if pg_config is not None, run the postgres prediction[0] of this code
-    pg_config = app_config['pg_config']
+    pgutil = PGUTIL(app_config, json_path)
 
     # if this is True, run the prediction[0] "for line in contents:" below
     sort_by_match_strength = app_config['sort_by_match_strength']
@@ -34,14 +35,22 @@ def format_result(app_config: Config, json_path):
         # handles data for first prediction for a given photo
         total_count += 1
         guess_label = prediction[0][0][1]
+        match_accuracy = prediction[0][0][2]
         match_strength = 'weak'
 
+        # container for data to ship to pg
+        pgutil.insert_data({
+            "filename": img_path,
+            "topprediction": guess_label,
+            "matchaccuracy": match_accuracy
+        })
+
         # assign value for match strength
-        if float(prediction[0][0][2]) > 0.9:
+        if float(match_accuracy) > 0.9:
             match_strength = 'strong'
-        elif float(prediction[0][0][2]) > 0.7:
+        elif float(match_accuracy) > 0.7:
             match_strength = 'moderate'
-        elif float(prediction[0][0][2]) > 0.4:
+        elif float(match_accuracy) > 0.4:
             match_strength = 'fair'
         elif match_strength == 'weak':
             weak_results += 1

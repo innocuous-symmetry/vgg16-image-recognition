@@ -2,7 +2,7 @@ import psycopg2, json
 from config import Config
 
 class PGUTIL:
-    def __init__(self, config_file: Config = None):
+    def __init__(self, config_file: Config = None, json_path: str = None):
         if config_file is None:
             load_config = Config()
             config_file = load_config.run()
@@ -11,7 +11,8 @@ class PGUTIL:
 
         if pg_dsn is None:
             raise Exception("Insufficient data to establish PostgreSQL connection.")
-
+        if json_path:
+            self.json_path = json_path
         self.config_file = config_file
 
     def create_tables(self):
@@ -59,5 +60,12 @@ class PGUTIL:
 
         print("Connection closed.")
     
-    def insert_data(self):
-        pass
+    def insert_data(self, analysis):
+        # if self.json_path is None:
+        #     return
+
+        # establish pg connection
+        conn = psycopg2.connect(self['config_file']['dsn'])
+        cur = conn.cursor()
+
+        
