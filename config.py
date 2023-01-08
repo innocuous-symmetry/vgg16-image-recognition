@@ -3,10 +3,16 @@ import psycopg2
 
 class Config:
     # store all user input
-    def __init__(self):
-        self.data_path = None
-        self.pg_config = None
-        self.sort_by_match_strength = False
+    def __init__(self, format=None):
+        if format:
+            self = format
+        else:
+            self.data_path: str = ""
+            self.pg_config = None
+            self.sort_by_match_strength: bool = False
+
+    def __repr__(self):
+        return f"data path: {self.data_path}, pg_config: {self.pg_config}, sorted: {str(self.sort_by_match_strength)}"
 
     def run(self):
         """Completes new config process or uses an existing one. Dumps new data into a JSON file if it is generated, and returns either an old instance of `Config` or the new one as `self`"""
@@ -15,14 +21,14 @@ class Config:
             if prev_config is not None:
                 return prev_config
             else:
-                self.get_data_path()
+                self.receive_data_path()
                 self.set_pg_config()
                 self.output_formatting()
                 with open("./config.json", "w") as outfile:
                     json.dump(self.__encode(), outfile)
                 return self
         else:
-            self.get_data_path()
+            self.receive_data_path()
             self.set_pg_config()
             self.output_formatting()
             with open("./config.json", "w") as outfile:
@@ -35,25 +41,32 @@ class Config:
         response_for_prev_config = input("Use existing configuration file? y/n " ).lower()
         
         if response_for_prev_config == "y":
-            prev_data: Config = open("./config.json")
-            prev_data = json.load(prev_data)
-            return prev_data
+            with open("./config.json", "r") as infile:
+                config_data = json.load(infile)
+
+            return Config(config_data)
         elif response_for_prev_config == "n":
             return None
         else:
             print("Invalid response.")
             self.handle_prev_config()
 
-    def get_data_path(self):
+    def receive_data_path(self):
         """Locates a valid directory from user input and stores it in Config state as `self.data_path`."""
         data_path = input("Provide the location of the directory where we can find your photos: ")
 
         if not os.path.exists(data_path):
             print("We didn't find a directory by this name.")
-            self.data_path = self.get_data_path()
+            self.receive_data_path()
         else:
             print("Got it!")
             self.data_path = data_path
+
+    def get_data_path(self):
+        return self.data_path
+
+    def set_data_path(self, value):
+        self.data_path = value
 
     def set_pg_config(self):
         """Determine if data should be associated with a PostgreSQL instance, and, if so, record the required connection info"""
@@ -108,6 +121,3 @@ class Config:
 
     def __encode(self):
         return json.dumps(self, default=lambda x: x.__dict__)
-
-new_config = Config()
-new_config.run()
