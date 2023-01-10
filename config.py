@@ -26,14 +26,14 @@ class Config:
                 self.output_formatting()
                 with open("./config.json", "w") as outfile:
                     json.dump(self.__dict__, outfile)
-                return self
+                return self.__dict__
         else:
             self.receive_data_path()
             self.set_pg_config()
             self.output_formatting()
             with open("./config.json", "w") as outfile:
                 json.dump(self.__dict__, outfile)
-            return self
+            return self.__dict__
 
     # if a config file already exists, offer to use it instead
     def handle_prev_config(self):
@@ -80,15 +80,16 @@ class Config:
             try:
                 dsn = f"dbname={dbname} user={user} password={password}"
                 if host:
-                    dsn = dsn + host
+                    dsn = dsn + " host=" + host
 
                 if port:
-                    dsn = dsn + port
+                    dsn = dsn + + " port=" + port
 
                 conn = psycopg2.connect(f"dbname={dbname} user={user} password={password}")
                 conn.close()
 
                 print("Connection successful!")
+
                 self.pg_dsn = dsn
             except psycopg2.Error as e:
                 print("There was an error connecting: ")

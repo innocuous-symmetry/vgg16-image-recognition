@@ -1,4 +1,5 @@
 import json, os, shutil
+import psycopg2
 from pgutil import PGUTIL
 from config import Config
 
@@ -9,7 +10,8 @@ def format_result(app_config: Config, json_path):
     data_path = app_config['data_path']
 
     # if pg_config is not None, run the postgres prediction[0] of this code
-    pgutil = PGUTIL(app_config, json_path)
+    if app_config['pg_dsn']:
+        pgutil = PGUTIL(app_config, json_path)
 
     # if this is True, run the prediction[0] "for line in contents:" below
     sort_by_match_strength = app_config['sort_by_match_strength']
@@ -39,11 +41,20 @@ def format_result(app_config: Config, json_path):
         match_strength = 'weak'
 
         # container for data to ship to pg
-        pgutil.insert_data({
-            "filename": img_path,
-            "topprediction": guess_label,
-            "matchaccuracy": match_accuracy
-        })
+        if pgutil:
+            conn = psycopg2.connect(app_config['pg_dsn'])
+            cur = conn.cursor()
+
+            pgutil.insert_data(cur, {
+                "filename": img_path,
+                "topprediction": guess_label,
+                "matchaccuracy": match_accuracy
+            })
+
+            conn.commit()
+            cur.close()
+            conn.close()
+            print("Database insertions successful!")
 
         # assign value for match strength
         if float(match_accuracy) > 0.9:

@@ -62,7 +62,7 @@ for file in files:
 
 json_path = "./predictions/predictions" + cur_time + ".json"
 
-print("Writing analysis results to " + json_path + "\n\n")
+print("\nWriting analysis results to " + json_path + "\n\n")
 
 # convert object to JSON and write to JSON file
 with open(json_path, "w") as outfile:

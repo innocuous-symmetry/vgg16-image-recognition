@@ -5,38 +5,35 @@ class PGUTIL:
     def __init__(self, config_file: Config = None, json_path: str = None):
         if config_file is None:
             load_config = Config()
-            config_file = load_config.run()
+            self.config_file = load_config.run()
 
-        pg_dsn = config_file['pg_dsn']
+        self.pg_dsn = config_file['pg_dsn']
 
-        if pg_dsn is None:
-            raise Exception("Insufficient data to establish PostgreSQL connection.")
         if json_path:
             self.json_path = json_path
-        self.config_file = config_file
+        if config_file['pg_dsn'] is None:
+            raise Exception("Insufficient data to establish PostgreSQL connection.")
 
     def create_tables(self):
-        pg_dsn = self.config_file['pg_dsn']
-
         print("Connecting to PostgreSQL...")
 
         # establish connection and create cursor
-        conn = psycopg2.connect(pg_dsn)
+        conn = psycopg2.connect(self.__dict__['pg_dsn'])
         cur = conn.cursor()
 
         # create base tables
         create_label_table = """
         CREATE TABLE IF NOT EXISTS label (
-            id INT PRIMARY KEY,
-            name varchar
+            id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+            name varchar UNIQUE
         );
         """
         
         create_photo_table = """
         CREATE TABLE IF NOT EXISTS photo (
-            id INT PRIMARY KEY,
-            path varchar,
-            label varchar,
+            id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+            filename varchar,
+            guesslabel varchar,
             matchstrength decimal,
             labelid INT REFERENCES label(id)
         );
@@ -60,12 +57,29 @@ class PGUTIL:
 
         print("Connection closed.")
     
-    def insert_data(self, analysis):
-        # if self.json_path is None:
-        #     return
+    def insert_data(self, cur, analysis):
+        self.create_tables()
 
-        # establish pg connection
-        conn = psycopg2.connect(self['config_file']['dsn'])
-        cur = conn.cursor()
+        insert_label = """
+        INSERT INTO label (name) VALUES (%s)
+        ON CONFLICT (name) DO NOTHING;
+        """
 
-        
+        filename = analysis['filename']
+        guesslabel = analysis['topprediction']
+        matchstrength = analysis['matchaccuracy']
+
+        insert_photo = """
+        INSERT INTO photo (filename, guesslabel, matchstrength, labelid) VALUES (
+            %s, %s, %s, (
+                SELECT id FROM label
+                WHERE name = %s
+            )
+        );
+        """
+
+        try:
+            cur.execute(insert_label, [guesslabel])
+            cur.execute(insert_photo, [filename, guesslabel, matchstrength, guesslabel])
+        except psycopg2.Error:
+            raise Exception("Problem inserting data for photo " + analysis['filename'])
