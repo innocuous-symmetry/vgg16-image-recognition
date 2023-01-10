@@ -1,4 +1,4 @@
-import psycopg2, json
+import psycopg2
 from config import Config
 
 class PGUTIL:
