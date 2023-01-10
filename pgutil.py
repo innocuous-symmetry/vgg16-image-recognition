@@ -25,7 +25,8 @@ class PGUTIL:
         create_label_table = """
         CREATE TABLE IF NOT EXISTS label (
             id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-            name varchar UNIQUE
+            name varchar UNIQUE,
+            photocount INT
         );
         """
         
@@ -78,8 +79,18 @@ class PGUTIL:
         );
         """
 
+        update_label_count = """
+        UPDATE label
+        SET photocount = (
+            SELECT COUNT(*) FROM photo
+            WHERE guesslabel = %s
+        )
+        WHERE name = %s
+        """
+
         try:
             cur.execute(insert_label, [guesslabel])
             cur.execute(insert_photo, [filename, guesslabel, matchstrength, guesslabel])
+            cur.execute(update_label_count, [guesslabel, guesslabel])
         except psycopg2.Error:
             raise Exception("Problem inserting data for photo " + analysis['filename'])
